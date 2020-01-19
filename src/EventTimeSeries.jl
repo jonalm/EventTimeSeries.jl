@@ -12,10 +12,10 @@ export
     timestamps,
     tags,
     values,
-    drop_repeated,
     split,
-    merge,
-    fill_forward_group_tags
+    drop_repeated,
+    merge
+
 
 
 
@@ -23,7 +23,6 @@ include("helpers.jl")
 include("event.jl")
 include("tagtype.jl")
 include("timeseries.jl")
-
 
 
 
