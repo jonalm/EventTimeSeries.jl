@@ -1,3 +1,4 @@
+
 module EventTimeSeries
 
 using Base.Iterators: flatten, repeated
@@ -22,7 +23,6 @@ export
 include("helpers.jl")
 include("tagtype.jl")
 include("timeseries.jl")
-
 
 
 # split

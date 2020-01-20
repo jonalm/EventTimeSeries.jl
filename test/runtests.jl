@@ -79,3 +79,33 @@ end
         @test ts.tag == [:foo,:foobar,:bar,:foobar]
     end
 end
+
+@testset "merge -> split gives back result" begin
+    t1 = [1,3]
+    v1 = [:a,:c]
+    tag1 = :A
+    ts1 = EventTS(timestamps=t1, values=v1, tag=tag1)
+
+    t2 = [2,4]
+    v2 = [:b,:d]
+    tag2 = :B
+    ts2 = EventTS(timestamps=t2, values=v2, tag=tag2)
+
+    ts1_, ts2_ = split(merge(ts1, ts2))
+
+    @test ts1.timestamps == ts1_.timestamps
+    @test ts1.tag == ts1_.tag
+    @test ts1.values == ts1_.values
+end
+
+@testset "split -> merge gives back result" begin
+    t = [1,2,3,4]
+    v = rand(4)
+    tag = [:a,:b,:a,:c]
+    ts = EventTS(timestamps=t, values=v, tag=tag)
+    ts_ = merge(split(ts)...)
+
+    @test ts_.timestamps == ts.timestamps
+    @test ts_.tag == ts.tag
+    @test ts_.values == ts.values
+end

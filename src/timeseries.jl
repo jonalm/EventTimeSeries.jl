@@ -25,16 +25,18 @@ end
 tagtype(s::EventTS) = tagtype(s.tag)
 
 rows(ts::EventTS) = @inbounds (ts[i] for i in 1:length(ts))
-
 timestamps(ts::EventTS) = (e.time for e in rows(ts))
+timestamps(ts::EventTS, tag) = (e.time for e in rows(ts) if e.tag==tag)
 
-tags(ts::EventTS) = tags(ts::EventTS, tagtype(ts))
-tags(ts::EventTS, ::EventTag) = repeated(ts.tag, length(ts))
-tags(ts::EventTS, ::SeriesTag) = ts.tag
+tags(ts::EventTS) = _tags(ts::EventTS, tagtype(ts))
+
+_tags(ts::EventTS, ::EventTag) = repeated(ts.tag, length(ts))
+_tags(ts::EventTS, ::SeriesTag) = ts.tag
 
 duration(ts::EventTS) =  ts.series.timestamps[end] - ts.series.timestamps[1]
 
 Base.values(ts::EventTS) = (e.val for e in rows(ts))
+Base.values(ts::EventTS, tag) = (e.val for e in rows(ts) if e.tag==tag)
 
 Base.IndexStyle(::EventTS) = LinearIndices()
 
@@ -55,9 +57,10 @@ function _getindex(ts::EventTS, i::Integer, ::SeriesTag)
     (time=ts.timestamps[i], tag=ts.tag[i], val=ts.values[i])
 end
 
-function Base.merge(ts1::EventTS{T}, ts2::EventTS{T}) where {T}
-    _merge(ts1, tagtype(ts1), ts2, tagtype(ts2))
-end
+
+Base.merge(ts::EventTS{T}...) where {T} = foldl(_merge, ts)
+
+_merge(ts1::EventTS, ts2::EventTS) = _merge(ts1, tagtype(ts1), ts2, tagtype(ts2))
 
 function _timestamps_values_sortperm(ts1, ts2)
     timestamps = flatten((ts1.timestamps, ts2.timestamps)) |> collect
@@ -92,16 +95,7 @@ end
 Base.split(ts::EventTS) = split(ts, tagtype(ts))
 Base.split(ts::EventTS, ::EventTag) = [ts,]
 function Base.split(ts::EventTS, ::SeriesTag)
-    splitseries = Dict{eltype(ts.tag), Any}()
-
-    for i in 1:length(ts)
-        tag = ts.tag[i]
-        el = ts.series[i]
-        if haskey(splitseries, tag)
-            push!(splitseries[tag], el)
-        else
-            splitseries[tag] = [el]
-        end
-    end
-    [EventTS(s, t) for (t,s) in splitseries]
+    tags_ =  tags(ts) |> unique |> sort
+    [EventTS(timestamps(ts, t) |> collect, t,
+             values(ts,t) |> collect) for t in tags_]
 end
