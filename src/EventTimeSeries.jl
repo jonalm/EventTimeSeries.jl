@@ -20,7 +20,6 @@ export
 
 
 include("helpers.jl")
-include("event.jl")
 include("tagtype.jl")
 include("timeseries.jl")
 
