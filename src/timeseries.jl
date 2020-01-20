@@ -1,11 +1,18 @@
 
+struct Event{T, U, V}
+    time::T
+    tag::U
+    val::V
+end
+Base.show(io::IO, e::Event) = print(io, "time: $(e.time),\ttag:$(e.tag),\tvalue:$(e.val)")
+
 struct SkipValidation end
 
-struct EventTS{T, U, V}
-    timestamps::T
+struct EventTS{T, U, V} <: AbstractVector{Event{T}}
+    timestamps::Vector{T}
     tag::U
     values::V
-    function EventTS(timestamps::T, tag::U, values::V, ::SkipValidation) where {T, U, V}
+    function EventTS(timestamps::Vector{T}, tag::U, values::V, ::SkipValidation) where {T, U, V}
         new{T,U,V}(timestamps, tag, values)
     end
 end
@@ -24,34 +31,38 @@ function _validate_tag(timestamps, tag, ::SeriesTag)
     @assert tagtype(first(tag)) == EventTag()
 end
 
-tagtype(s::EventTS) = tagtype(s.tag)
+timestamps(ts::EventTS) = (e.time for e in ts)
+timestamps(ts::EventTS, tag) = (e.time for e in ts if e.tag==tag)
 
-rows(ts::EventTS) = @inbounds (ts[i] for i in 1:length(ts))
-
-timestamps(ts::EventTS) = (e.time for e in rows(ts))
-timestamps(ts::EventTS, tag) = (e.time for e in rows(ts) if e.tag==tag)
+Base.values(ts::EventTS) = (e.val for e in ts)
+Base.values(ts::EventTS, tag) = (e.val for e in ts if e.tag==tag)
 
 tag(ts::EventTS) = ts.tag
-
 tags(ts::EventTS) = _tags(ts::EventTS, tagtype(ts))
-
 _tags(ts::EventTS, ::EventTag) = repeated(ts.tag, length(ts))
 _tags(ts::EventTS, ::SeriesTag) = ts.tag
 
-duration(ts::EventTS) =  ts.series.timestamps[end] - ts.series.timestamps[1]
+tagtype(s::EventTS) = tagtype(s.tag)
+duration(ts::EventTS) =  ts.timestamps[end] - ts.timestamps[1]
 
-Base.values(ts::EventTS) = (e.val for e in rows(ts))
-Base.values(ts::EventTS, tag) = (e.val for e in rows(ts) if e.tag==tag)
-
-Base.IndexStyle(::EventTS) = LinearIndices()
-
-Base.length(ts::EventTS) = length(ts.timestamps)
-
-function Base.iterate(ts::EventTS, (el, i)=(ts[1], 0))
-    i == length(ts) ? nothing : (el, (ts[i+1], i+1))
+function _2matrix(ts::EventTS)
+    mat = Matrix{Any}(undef, length(ts), 3)
+    mat[:,1] .= timestamps(ts)
+    mat[:,2] .= tag(ts)
+    mat[:,3] .= values(ts)
+    mat
 end
 
-Base.getindex(ts::EventTS, i) = _getindex(ts, i, tagtype(ts))
+pretty_print(ts::EventTS) = pretty_table(_2matrix(ts), [:time, :tag, :value]; tf=simple)
+
+###
+### Abstract array Interface
+###
+
+Base.IndexStyle(::EventTS) = IndexLinear()
+Base.size(ts::EventTS) = size(ts.timestamps)
+Base.setindex!(::EventTS, v, i) = @error "EventTS does not support set_index!"
+Base.getindex(ts::EventTS, I) = _getindex(ts, I, tagtype(ts))
 
 function _getindex(ts::EventTS, s, ::EventTag)
     EventTS(ts.timestamps[s], ts.tag, ts.values[s], SkipValidation())
@@ -60,10 +71,10 @@ function _getindex(ts::EventTS, s, ::SeriesTag)
     EventTS(ts.timestamps[s], ts.tag[s], ts.values[s], SkipValidation())
 end
 function _getindex(ts::EventTS, i::Integer, ::EventTag)
-    (time=ts.timestamps[i], tag=ts.tag, val=ts.values[i])
+    Event(ts.timestamps[i], ts.tag, ts.values[i])
 end
 function _getindex(ts::EventTS, i::Integer, ::SeriesTag)
-    (time=ts.timestamps[i], tag=ts.tag[i], val=ts.values[i])
+    Event(ts.timestamps[i], ts.tag[i], ts.values[i])
 end
 
 
@@ -125,9 +136,10 @@ function _combined_val(tag, val, utags, vals)
     out
 end
 
-fill_forward(ts::EventTS) = fill_forward(ts, tagtype(ts))
-fill_forward(ts::EventTS, ::EventTag) = ts
-function fill_forward(ts::EventTS, ::SeriesTag)
+merge_tags(ts::EventTS) = merge_tags(ts, tagtype(ts))
+
+merge_tags(ts::EventTS, ::EventTag) = ts
+function merge_tags(ts::EventTS, ::SeriesTag)
     utags =  tags(ts) |> unique |> sort
     vals = Any[nothing for i in  1:length(utags)]
     values = [_combined_val(t, v, utags, vals) for (t,v) in zip(ts.tag, ts.values)]

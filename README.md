@@ -14,7 +14,7 @@ The package exports the type `EventTS`, which holds the time series. It should b
 
 If `tagtype(tag) == EventTag` then `tag` is unique and applied to each entry in the series.
 
-If `tagtype(tag) == SeriesTag` and `tagtype(eltype(tag)) == EventTag`, then `tag` holds a (potentially different) tag for each entry in the series.
+If `tagtype(tag) == SeriesTag()` and `tagtype(eltype(tag)) == EventTag()`, then `tag` holds a (potentially different) tag for each entry in the series.
 
 By default `tagtype(tag::T) == SeriesTag()` if `T<:AbstractVector` or `T<:AbstractRange`, and `tagtype(tag::T) == EventTag()` for when `T` is any of `Symbol, Char, String, Tuple, NamedTuple, Number`.
 
@@ -28,12 +28,10 @@ By default `tagtype(tag::T) == SeriesTag()` if `T<:AbstractVector` or `T<:Abstra
 
 `drop_repeated(ts::EventTS; keep_end=true)` returns an `EventTS`, where entries of (`timestamp, tag, value`) are dropped if the it contains a repeating  `value` for a given `tag`. If `keep_end=true` then the entry with the largest timestamp is kept regardless.
 
-`fill_forward(ts::EventTS)` returns a new `EventTS`. If `tagtype(ts)==EventTag()` it simply returns `ts`. If `tagtype(ts)==SeriesTag()` then the returned time series has:
+`merge_tags(ts::EventTS)` returns a new `EventTS`. If `tagtype(ts)==EventTag()` it simply returns `ts`. If `tagtype(ts)==SeriesTag()` then the returned time series has:
 - One entry for each timestamp in the input.
 - Each value contains a tuple of values for each tag in the input. Values for each tag are filled forward.
 - The tag is a sorted tuple of all unqiue tags in the input series.
-
-
 
 
 ## Install
@@ -42,8 +40,3 @@ By default `tagtype(tag::T) == SeriesTag()` if `T<:AbstractVector` or `T<:Abstra
 julia> ]
 pkg> add "https://github.com/jonalm/EventTimeSeries.jl.git"
 ```
-
-## Todo
-
-- implement `Table.jl` interface
-- implement `TableTraits.jl` interface

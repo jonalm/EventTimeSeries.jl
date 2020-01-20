@@ -3,6 +3,8 @@ module EventTimeSeries
 
 using Base.Iterators: flatten, repeated
 
+using PrettyTables: pretty_table, simple
+
 export
     # types
     Event,
@@ -13,8 +15,9 @@ export
     timestamps,
     tags,
     split,
+    merge_tags,
     drop_repeated,
-    fill_forward
+    pretty_print
 
 
 include("helpers.jl")

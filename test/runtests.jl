@@ -36,9 +36,9 @@ end
 
     for (a,b) in ((ts1,ts2), (ts2,ts1))
         ts = merge(a, b)
-        @test timestamps(ts) |> collect == [1,2,3,4]
-        @test values(ts) |> collect == [:a,:b,:c,:d]
-        @test ts.tag == [:foo,:bar,:foo,:bar]
+        @test timestamps(ts) |> collect == [1, 2, 3, 4]
+        @test values(ts) |> collect == [:a, :b, :c, :d]
+        @test ts.tag == [:foo, :bar, :foo, :bar]
     end
 end
 
@@ -112,8 +112,8 @@ end
 
 
 @testset "drop repeated 1" begin
-    t1 = 0:2:10
-    t2 = 1:2:9
+    t1 = 0:2:10 |> collect
+    t2 = 1:2:9 |>  collect
     tag = :tagtag
     val1 = 1:length(t1)
     val2 = 1:length(t2)
@@ -128,7 +128,7 @@ end
 end
 
 @testset "drop repeated 2" begin
-    time = 1:6
+    time = 1:6 |> collect
     tag = [i==4 ? :foo : :bar for (i,t) in enumerate(time)]
     values = [:a, :b, :b, :b, :d, :d]
     ts = EventTS(timestamps=time, tag=tag, values=values)
@@ -142,13 +142,13 @@ end
     @test ts2.values == [:a, :b, :b, :d]
 end
 
-@testset "fill forward" begin
+@testset "merge tags fill forward" begin
     time   = [0, 1, 2, 3, 4, 5]
     tag    = [:A, :A,:B,:A,:B, :B]
     values = time
 
     ts  = EventTS(timestamps=time, values=values, tag=tag)
-    ts_ = fill_forward(ts)
+    ts_ = merge_tags(ts)
 
     @test ts_.values == [(0,nothing),
                          (1,nothing),
