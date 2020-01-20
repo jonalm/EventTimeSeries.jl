@@ -140,5 +140,22 @@ end
 
     @test ts2.timestamps == [1,2,4,5]
     @test ts2.values == [:a, :b, :b, :d]
+end
 
+@testset "fill forward" begin
+    time   = [0, 1, 2, 3, 4, 5]
+    tag    = [:A, :A,:B,:A,:B, :B]
+    values = time
+
+    ts  = EventTS(timestamps=time, values=values, tag=tag)
+    ts_ = fill_forward(ts)
+
+    @test ts_.values == [(0,nothing),
+                         (1,nothing),
+                         (1,2),
+                         (3,2),
+                         (3,4),
+                         (3,5)]
+
+    @test ts_.tag == (:A, :B)
 end
