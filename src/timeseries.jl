@@ -28,6 +28,8 @@ rows(ts::EventTS) = @inbounds (ts[i] for i in 1:length(ts))
 timestamps(ts::EventTS) = (e.time for e in rows(ts))
 timestamps(ts::EventTS, tag) = (e.time for e in rows(ts) if e.tag==tag)
 
+tag(ts::EventTS) = ts.tag
+
 tags(ts::EventTS) = _tags(ts::EventTS, tagtype(ts))
 
 _tags(ts::EventTS, ::EventTag) = repeated(ts.tag, length(ts))
@@ -98,4 +100,15 @@ function Base.split(ts::EventTS, ::SeriesTag)
     tags_ =  tags(ts) |> unique |> sort
     [EventTS(timestamps(ts, t) |> collect, t,
              values(ts,t) |> collect) for t in tags_]
+end
+
+drop_repeated(ts::EventTS; keep_end=true) = drop_repeated(ts, tagtype(ts), keep_end=keep_end)
+function drop_repeated(ts::EventTS, ::SeriesTag; keep_end)
+    merge([drop_repeated(ts_, keep_end=keep_end && tag(ts_)==ts.tag[end]) 
+           for ts_ in split(ts)]...)
+end
+function drop_repeated(ts::EventTS, ::EventTag; keep_end)
+    select = [true; [a!=b for (a,b) in neighbors(ts.values)]]
+    keep_end && (select[end] = true)
+    EventTS(ts.timestamps[select], ts.tag, ts.values[select])
 end

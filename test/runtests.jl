@@ -109,3 +109,36 @@ end
     @test ts_.tag == ts.tag
     @test ts_.values == ts.values
 end
+
+
+@testset "drop repeated 1" begin
+    t1 = 0:2:10
+    t2 = 1:2:9
+    tag = :tagtag
+    val1 = 1:length(t1)
+    val2 = 1:length(t2)
+
+    ts1 = EventTS(timestamps=t1, values=val1, tag=tag)
+    ts2 = EventTS(timestamps=t2, values=val2, tag=tag)
+    tsd = drop_repeated(merge(ts1,ts2))
+
+    @test ts1.timestamps == tsd.timestamps
+    @test ts1.tag == tsd.tag
+    @test ts1.values == tsd.values
+end
+
+@testset "drop repeated 2" begin
+    time = 1:6
+    tag = [i==4 ? :foo : :bar for (i,t) in enumerate(time)]
+    values = [:a, :b, :b, :b, :d, :d]
+    ts = EventTS(timestamps=time, tag=tag, values=values)
+    ts1 = drop_repeated(ts) # keep_end true by default
+    ts2 = drop_repeated(ts, keep_end=false)
+
+    @test ts1.timestamps == [1,2,4,5,6]
+    @test ts1.values == [:a, :b, :b, :d, :d]
+
+    @test ts2.timestamps == [1,2,4,5]
+    @test ts2.values == [:a, :b, :b, :d]
+
+end
