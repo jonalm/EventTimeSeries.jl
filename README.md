@@ -4,7 +4,7 @@
 
 # EventTimeSeries.jl
 
-Core functionality for handling event time series where each row/entry conforms to a triplet which consist of a timestamp, a tag and a value.
+Implements some functionality to handle event time series where each row/entry conforms to a triplet which consist of a timestamp, a tag and a value.
 
 Contains partly overlapping functionality with [TimeSeries.jl](https://github.com/JuliaStats/TimeSeries.jl).
 
@@ -24,15 +24,14 @@ By default `tagtype(tag::T) == SeriesTag()` if `T<:AbstractVector` or `T<:Abstra
 
 `merge(ts::EventTS...)` splices together an arbitrary number of `EventTS` and returns a single `EventTS` where all entries are sorted with respect to timestamps.
 
-`split(ts::EventTS)` returns an array of `EventTS`, where each `EventTS` element has a unique tag.
+`split(ts::EventTS)` splits the timeseries and returns an array of `EventTS`, where each `EventTS` element has a unique tag.
 
-`drop_repeated(ts::EventTS; keep_end=true)` returns an `EventTS`, where entries of (`timestamp, tag, value`) are dropped if the preceding entry with equal `tag` contains an equal `value`. If `keep_end=true` then the entry with the largest timestamp is kept regardless.
-
+`drop_repeated(ts::EventTS; keep_end=true)` returns an `EventTS`, where entries of (`timestamp, tag, value`) are dropped if the it contains a repeating  `value` for a given `tag`. If `keep_end=true` then the entry with the largest timestamp is kept regardless.
 
 `fill_forward(ts::EventTS)` returns a new `EventTS`. If `tagtype(ts)==EventTag()` it simply returns `ts`. If `tagtype(ts)==SeriesTag()` then the returned time series has:
-- one entry for each timestamp in the input,
-- each value contains a tuple of values for each tag in the input. Values for each tag are filled forward.
-- the tag is a sorted tuple of all unqiue tags in the input series.
+- One entry for each timestamp in the input.
+- Each value contains a tuple of values for each tag in the input. Values for each tag are filled forward.
+- The tag is a sorted tuple of all unqiue tags in the input series.
 
 
 
