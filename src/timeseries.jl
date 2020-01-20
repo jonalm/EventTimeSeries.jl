@@ -1,11 +1,11 @@
 
-struct ValidInput end
+struct Force end
 
 struct EventTS{T, U, V}
     timestamps::T
     tag::U
     values::V
-    function EventTS(timestamps::T, tag::U, values::V, ::ValidInput) where {T, U, V}
+    function EventTS(timestamps::T, tag::U, values::V, ::Force) where {T, U, V}
         new{T,U,V}(timestamps, tag, values)
     end
 end
@@ -14,7 +14,7 @@ function EventTS(;timestamps, tag, values)
     @assert issorted(timestamps)
     @assert length(timestamps) == length(values)
     _validate_tag(timestamps, tag)
-    EventTS(timestamps, tag, values, ValidInput())
+    EventTS(timestamps, tag, values, Force())
 end
 
 _validate_tag(timestamps, tag) = _validate_tag(timestamps, tag, tagtype(tag))
@@ -52,8 +52,8 @@ end
 
 Base.getindex(ts::EventTS, i) = _getindex(ts, i, tagtype(ts))
 
-_getindex(ts::EventTS, s, ::EventTag) = EventTS(ts.timestamps[s], ts.tag, ts.values[s], ValidInput())
-_getindex(ts::EventTS, s, ::SeriesTag) = EventTS(ts.timestamps[s], ts.tag[s], ts.values[s], ValidInput())
+_getindex(ts::EventTS, s, ::EventTag) = EventTS(ts.timestamps[s], ts.tag, ts.values[s], Force())
+_getindex(ts::EventTS, s, ::SeriesTag) = EventTS(ts.timestamps[s], ts.tag[s], ts.values[s], Force())
 function _getindex(ts::EventTS, i::Integer, ::EventTag)
     (time=ts.timestamps[i], tag=ts.tag, val=ts.values[i])
 end
@@ -76,10 +76,10 @@ end
 function _merge(ts1, ::EventTag, ts2, ::EventTag)
     timestamps, values, perm = _timestamps_values_sortperm(ts1, ts2)
     if ts1.tag == ts2.tag
-        return EventTS(timestamps, ts1.tag, values, ValidInput())
+        return EventTS(timestamps, ts1.tag, values, Force())
     else
         tag = flatten((repeated(ts1.tag, length(ts1)), repeated(ts2.tag, length(ts2)))) |> collect
-        return EventTS(timestamps, tag[perm], values, ValidInput())
+        return EventTS(timestamps, tag[perm], values, Force())
     end
 end
 _merge(ts1, ::EventTag, ts2, ::SeriesTag) = _merge(ts2, tagtype(ts2), ts1, tagtype(ts1))
@@ -87,12 +87,12 @@ function _merge(ts1, ::SeriesTag, ts2, ::EventTag)
     timestamps, values, perm = _timestamps_values_sortperm(ts1, ts2)
     tag2 = repeated(ts2.tag, length(ts2)) |> collect
     tag = [ts1.tag; tag2]
-    EventTS(timestamps, tag[perm], values, ValidInput())
+    EventTS(timestamps, tag[perm], values, Force())
 end
 function _merge(ts1, ::SeriesTag, ts2, ::SeriesTag)
     timestamps, values, perm = _timestamps_values_sortperm(ts1, ts2)
     tag = vcat(ts1.tag, ts2.tag)
-    EventTS(timestamps, tag[perm], values, ValidInput())
+    EventTS(timestamps, tag[perm], values, Force())
 end
 
 
@@ -101,7 +101,7 @@ Base.split(ts::EventTS, ::EventTag) = [ts,]
 function Base.split(ts::EventTS, ::SeriesTag)
     tags_ =  tags(ts) |> unique |> sort
     [EventTS(timestamps(ts, t) |> collect, t,
-             values(ts,t) |> collect, ValidInput()) for t in tags_]
+             values(ts,t) |> collect, Force()) for t in tags_]
 end
 
 drop_repeated(ts::EventTS; keep_end=true) = drop_repeated(ts, tagtype(ts), keep_end=keep_end)
@@ -112,5 +112,5 @@ end
 function drop_repeated(ts::EventTS, ::EventTag; keep_end)
     select = [true; [a!=b for (a,b) in neighbors(ts.values)]]
     keep_end && (select[end] = true)
-    EventTS(ts.timestamps[select], ts.tag, ts.values[select], ValidInput())
+    EventTS(ts.timestamps[select], ts.tag, ts.values[select], Force())
 end
