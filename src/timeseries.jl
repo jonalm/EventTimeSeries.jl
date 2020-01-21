@@ -4,6 +4,7 @@ struct Event{T, U, V}
     tag::U
     val::V
 end
+
 Base.show(io::IO, e::Event) = print(io, "time: $(e.time),\ttag:$(e.tag),\tvalue:$(e.val)")
 
 struct SkipValidation end
@@ -78,7 +79,7 @@ function _getindex(ts::EventTS, i::Integer, ::SeriesTag)
 end
 
 
-Base.merge(ts::EventTS{T}...) where {T} = foldl(_merge, ts)
+splice(ts::EventTS{T}...) where {T} = foldl(_splice, ts)
 
 function _timestamps_values_sortperm(ts1, ts2)
     timestamps = flatten((ts1.timestamps, ts2.timestamps)) |> collect
@@ -87,8 +88,8 @@ function _timestamps_values_sortperm(ts1, ts2)
     timestamps[perm], values[perm], perm
 end
 
-_merge(ts1::EventTS, ts2::EventTS) = _merge(ts1, tagtype(ts1), ts2, tagtype(ts2))
-function _merge(ts1, ::EventTag, ts2, ::EventTag)
+_splice(ts1::EventTS, ts2::EventTS) = _splice(ts1, tagtype(ts1), ts2, tagtype(ts2))
+function _splice(ts1, ::EventTag, ts2, ::EventTag)
     timestamps, values, perm = _timestamps_values_sortperm(ts1, ts2)
     if ts1.tag == ts2.tag
         return EventTS(timestamps, ts1.tag, values, SkipValidation())
@@ -97,14 +98,14 @@ function _merge(ts1, ::EventTag, ts2, ::EventTag)
         return EventTS(timestamps, tag[perm], values, SkipValidation())
     end
 end
-_merge(ts1, ::EventTag, ts2, ::SeriesTag) = _merge(ts2, tagtype(ts2), ts1, tagtype(ts1))
-function _merge(ts1, ::SeriesTag, ts2, ::EventTag)
+_splice(ts1, ::EventTag, ts2, ::SeriesTag) = _splice(ts2, tagtype(ts2), ts1, tagtype(ts1))
+function _splice(ts1, ::SeriesTag, ts2, ::EventTag)
     timestamps, values, perm = _timestamps_values_sortperm(ts1, ts2)
     tag2 = repeated(ts2.tag, length(ts2)) |> collect
     tag = [ts1.tag; tag2]
     EventTS(timestamps, tag[perm], values, SkipValidation())
 end
-function _merge(ts1, ::SeriesTag, ts2, ::SeriesTag)
+function _splice(ts1, ::SeriesTag, ts2, ::SeriesTag)
     timestamps, values, perm = _timestamps_values_sortperm(ts1, ts2)
     tag = vcat(ts1.tag, ts2.tag)
     EventTS(timestamps, tag[perm], values, SkipValidation())
@@ -120,7 +121,7 @@ end
 
 drop_repeated(ts::EventTS; keep_end=true) = drop_repeated(ts, tagtype(ts), keep_end=keep_end)
 function drop_repeated(ts::EventTS, ::SeriesTag; keep_end)
-    merge([drop_repeated(ts_, keep_end=keep_end && tag(ts_)==ts.tag[end])
+    splice([drop_repeated(ts_, keep_end=keep_end && tag(ts_)==ts.tag[end])
            for ts_ in split(ts)]...)
 end
 function drop_repeated(ts::EventTS, ::EventTag; keep_end)
