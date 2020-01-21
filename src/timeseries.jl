@@ -7,7 +7,7 @@ end
 
 Base.show(io::IO, e::Event) = print(io, "time: $(e.time),\ttag:$(e.tag),\tvalue:$(e.val)")
 
-struct SkipValidation end
+struct SkipValidation end # indicates no validation of data in EventTS constructor
 
 struct EventTS{T, U, V} <: AbstractVector{Event{T}}
     timestamps::Vector{T}
@@ -49,8 +49,8 @@ duration(ts::EventTS) =  ts.timestamps[end] - ts.timestamps[1]
 function _2matrix(ts::EventTS)
     mat = Matrix{Any}(undef, length(ts), 3)
     mat[:,1] .= timestamps(ts)
-    mat[:,2] .= tag(ts)
-    mat[:,3] .= values(ts)
+    mat[:,2] .= tags(ts)
+    mat[:,3] .= ts.values
     mat
 end
 
