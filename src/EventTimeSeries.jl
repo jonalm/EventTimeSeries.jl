@@ -1,10 +1,6 @@
 
 module EventTimeSeries
 
-using Base.Iterators: flatten, repeated
-
-using PrettyTables: pretty_table, simple
-
 export
     # types
     Event,
@@ -23,5 +19,6 @@ export
 include("helpers.jl")
 include("tagtype.jl")
 include("timeseries.jl")
+include("intervalstats.jl")
 
 end

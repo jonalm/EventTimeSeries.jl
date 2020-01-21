@@ -8,7 +8,7 @@ This package provides some functionality to handle event time series where each 
 
 If you are looking for general time series functionality, check out the much more mature [TimeSeries.jl](https://github.com/JuliaStats/TimeSeries.jl) package first.  
 
-This package is motivated by sparse time series (i.e. one tag-value pair per timestamp) which represents state changes (i.e. tag-value pairs are valid until until a new value is given for the same tag, and that "forward fill" is the natural imputation strategy).
+This package is motivated by sparse time series (i.e. one tag-value pair per timestamp) which represents state changes (i.e. tag-value pairs are valid until a new value is given for the same tag, and "forward fill" is the natural imputation strategy).
 
 The package exports the type `EventTS` (subtype of `AbstractVector{Event}`) which holds the time series. It should be constructed by named arguments `EventTS(;timestamps, tag, values)` where
  - The `timestamps` must be a sorted vector and contain the same number of elements as `values`.
@@ -49,6 +49,7 @@ julia> ts1 |> pretty_print
     10     A   hello  
 ======= ===== ========
 
+
 julia> ts2 = EventTS(timestamps=[2,3,6], values=[:foo, :bar, :bar], tag=:B)
 julia> ts2 |> pretty_print
 ======= ===== ========
@@ -59,7 +60,9 @@ julia> ts2 |> pretty_print
      6     B     bar  
 ======= ===== ========
 
-julia> splice(ts1, ts2) |> pretty_print
+
+julia> ts = splice(ts1, ts2)
+julia> ts |> pretty_print
 ======= ===== ========
   time   tag   value  
 ======= ===== ========
@@ -72,7 +75,7 @@ julia> splice(ts1, ts2) |> pretty_print
 ======= ===== ========
 
 
-julia> splice(ts1, ts2) |> drop_repeated |> pretty_print
+julia> ts |> drop_repeated |> pretty_print
 ======= ===== ========
   time   tag   value  
 ======= ===== ========
@@ -83,7 +86,8 @@ julia> splice(ts1, ts2) |> drop_repeated |> pretty_print
     10     A   hello  
 ======= ===== ========
 
-julia> splice(ts1, ts2) |> drop_repeated |> split .|> pretty_print
+
+julia> ts |> split .|> pretty_print
 ======= ===== ========
   time   tag   value  
 ======= ===== ========
@@ -96,9 +100,11 @@ julia> splice(ts1, ts2) |> drop_repeated |> split .|> pretty_print
 ======= ===== ========
      2     B     foo  
      3     B     bar  
+     6     B     bar
 ======= ===== ========
 
-julia> splice(ts1, ts2) |> drop_repeated |> merge_tags |> pretty_print
+
+julia> ts2 |> drop_repeated |> merge_tags |> pretty_print
 ======= ========== ==================
   time        tag             value  
 ======= ========== ==================

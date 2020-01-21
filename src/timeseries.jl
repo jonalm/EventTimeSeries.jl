@@ -1,3 +1,5 @@
+using Base.Iterators: flatten, repeated
+using PrettyTables: pretty_table, simple
 
 struct Event{T, U, V}
     time::T
