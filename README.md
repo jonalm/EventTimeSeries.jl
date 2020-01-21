@@ -6,7 +6,7 @@
 
 Implements some functionality to handle event time series where each row/entry conforms to a triplet which consist of a timestamp, a tag and a value.
 
-Contains partly overlapping functionality with [TimeSeries.jl](https://github.com/JuliaStats/TimeSeries.jl).
+If you are looking for general time series functionality, check out the much more mature [TimeSeries.jl](https://github.com/JuliaStats/TimeSeries.jl) package first.  
 
 The package exports the type `EventTS` (subtype of `AbstractVector{Event}`) which holds the time series. It should be constructed by named arguments `EventTS(;timestamps, tag, values)` where
  - The `timestamps` must be a sorted vector and contain the same number of elements as `values`.
