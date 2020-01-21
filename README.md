@@ -4,9 +4,11 @@
 
 # EventTimeSeries.jl
 
-Implements some functionality to handle event time series where each row/entry conforms to a triplet which consist of a timestamp, a tag and a value.
+This package provides some functionality to handle event time series where each row/entry conforms to a triplet which consist of a timestamp, a tag and a value.
 
 If you are looking for general time series functionality, check out the much more mature [TimeSeries.jl](https://github.com/JuliaStats/TimeSeries.jl) package first.  
+
+This package is motivated by sparse time series (i.e. one tag-value pair per timestamp) which represents state changes (i.e. tag-value pairs are valid until until a new value is given for the same tag, and that "forward fill" is the natural imputation strategy).
 
 The package exports the type `EventTS` (subtype of `AbstractVector{Event}`) which holds the time series. It should be constructed by named arguments `EventTS(;timestamps, tag, values)` where
  - The `timestamps` must be a sorted vector and contain the same number of elements as `values`.
@@ -28,7 +30,7 @@ By default `tagtype(tag::T) == SeriesTag()` if `T<:AbstractVector` or `T<:Abstra
 
 `drop_repeated(ts::EventTS; keep_end=true)` returns an `EventTS`, where entries of (`timestamp, tag, value`) are dropped if the it contains a repeating  `value` for a given `tag`. If `keep_end=true` then the entry with the largest timestamp is kept regardless.
 
-`merge_tags(ts::EventTS)` returns a new `EventTS`. If `tagtype(ts)==EventTag()` it simply returns `ts`. If `tagtype(ts)==SeriesTag()` then the returned time series has:
+`merge_tags(ts::EventTS)` returns a new `EventTS`. If `tagtype(ts)==EventTag()` it simply returns `ts`. If `tagtype(ts)==SeriesTag()`, the returned time series has:
 - One entry for each timestamp in the input.
 - Each value contains a tuple of values for each tag in the input. Values for each tag are filled forward.
 - The tag is a sorted tuple of all unique tags in the input series.
