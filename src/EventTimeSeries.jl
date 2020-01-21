@@ -19,6 +19,5 @@ export
 include("helpers.jl")
 include("tagtype.jl")
 include("timeseries.jl")
-include("intervalstats.jl")
 
 end

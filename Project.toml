@@ -1,11 +1,10 @@
 name = "EventTimeSeries"
 uuid = "7b3b0897-f5bf-4bda-bc97-1b6cec243418"
 authors = ["Jon Alm Eriksen <jon.alm.eriksen@protonmail.com>"]
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 PrettyTables = "0.8"
