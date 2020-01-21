@@ -24,3 +24,5 @@ function interval_duration_stats(ts, val; groupby=previous_current_next_value)
     end
     Dict(k=>(count=length(v), duration_mean=mean(v), duration_std=std(v, corrected=false)) for (k,v) in groups)
 end
+
+export interval_duration_stats
